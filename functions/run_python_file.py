@@ -1,5 +1,9 @@
 import os
 import subprocess
+import sys
+
+from config import TIMEOUT_SECONDS
+from functions.paths import resolve_path
 
 schema_run_python_file = {
     "type": "function",
@@ -31,13 +35,8 @@ def run_python_file(
     working_directory: str, file_path: str, args: list[str] | None = None
 ) -> str:
     try:
-        working_dir_abs = os.path.abspath(working_directory)
-        target_file = os.path.normpath(os.path.join(working_dir_abs, file_path))
-
-        valid_target_file = (
-            os.path.commonpath([working_dir_abs, target_file]) == working_dir_abs
-        )
-        if not valid_target_file:
+        target_file, is_within = resolve_path(working_directory, file_path)
+        if not is_within:
             return f'Error: Cannot execute "{file_path}" as it is outside the permitted working directory'
 
         if not os.path.isfile(target_file):
@@ -46,16 +45,16 @@ def run_python_file(
         if not target_file.endswith(".py"):
             return f'Error: "{file_path}" is not a Python file'
 
-        command = ["python", target_file]
+        command = [sys.executable, target_file]
         if args:
             command.extend(args)
 
         completed = subprocess.run(
             command,
-            cwd=working_dir_abs,
+            cwd=os.path.abspath(working_directory),
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=TIMEOUT_SECONDS,
         )
 
         parts = []
@@ -70,5 +69,7 @@ def run_python_file(
                 parts.append(f"STDERR:\n{completed.stderr}")
 
         return "\n".join(parts)
+    except subprocess.TimeoutExpired:
+        return f'Error: "{file_path}" timed out after {TIMEOUT_SECONDS} seconds'
     except Exception as e:
         return f"Error: executing Python file: {e}"
