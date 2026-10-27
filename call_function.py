@@ -7,6 +7,7 @@ from functions.edit_file import edit_file, schema_edit_file
 from functions.get_file_content import get_file_content, schema_get_file_content
 from functions.get_files_info import get_files_info, schema_get_files_info
 from functions.run_python_file import run_python_file, schema_run_python_file
+from functions.search_files import schema_search_files, search_files
 from functions.write_file import schema_write_file, write_file
 
 available_functions = [
@@ -15,6 +16,7 @@ available_functions = [
     schema_run_python_file,
     schema_write_file,
     schema_edit_file,
+    schema_search_files,
 ]
 
 function_map: dict[str, Callable[..., str]] = {
@@ -23,6 +25,7 @@ function_map: dict[str, Callable[..., str]] = {
     "run_python_file": run_python_file,
     "write_file": write_file,
     "edit_file": edit_file,
+    "search_files": search_files,
 }
 
 
